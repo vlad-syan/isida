@@ -154,4 +154,4 @@ Legal information
 -----------------
 
 This project licensed under GPLv2, legal notes are included in source directory
-Author: Vladimir Sarkisya–
+Author: Vladimir Sarkisyan
