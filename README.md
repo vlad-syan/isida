@@ -24,6 +24,6 @@ https://github.com/vlad-syan/isida
 Legal information
 -----------------
 
-This project licensed under GPLv2, legal notes are included in source directory
+This project licensed under GPLv2, legal notes are included in source directory.
 
-Author: Vladimir Sarkisyan
+Author: Vladimir Sarkisyan (vlad.syan@gmail.com)
