@@ -153,4 +153,5 @@ https://github.com/vlad-syan/isida
 Legal information
 -----------------
 
-TODO
+This project licensed under GPLv2, legal notes are included in source directory
+Author: Vladimir Sarkisya–
