@@ -1,0 +1,158 @@
+ISIDA
+=====
+
+What is Isida?
+--------------
+
+Isida is a small customizable tool that automatically checks and (in 
+future releases) corrects network devices configuration according to 
+specified rules. The project itself was started as automatic tool to keep 
+settings correct on 3000+ different L2 switches in ISP's access network. 
+It may be useful in small and medium networks that don't have any other 
+centralized management tools. It requires bash, net-SNMP framework, 
+expect and cron as poller, it has nothing to compile within itself, it is 
+just a bunch of shell-scripts and some .conf files to keep this thing 
+working.
+
+
+How it works?
+-------------
+
+There is a spooler at /var/spool/isida that contain files with names 
+corresponding IP addresses of devices to process. There is no built-in 
+mechanism to add new items to spooler, you can use snmptrapd, syslog or 
+something else to add addresses to spooler according to your purposes. In 
+my case there was syslog-ng with filter, reacting at the word "saved", 
+and destination, creating file with /var/spooler/isida/$HOST as filename.
+
+The next stage is isida_poller.sh. When it starts, it collects list of 
+addresses (filenames) from spooler, removes then from spooler and calls 
+save_handler.sh with each list item as argument. All instances of 
+save_handler.sh are started simultaneously.
+
+The handler checks with ICMP ping is the device available and if it's 
+offline, adds its address to spooler again and exits. If device is 
+online, handler determines its model and forwards backup_config_L2.sh 
+with IP address and model OID as arguments.
+
+When backup_config_L2.sh starts, it moves the old config of this host (if 
+any) to $tftp_root/old/$DATE/$TIME_$IP, calls model-specified script that 
+downloads current config from device and passes it and model OID to 
+parse_cfg.sh if the model OID and/or IP address of device aren't listed 
+in 'exclude-lists'.
+
+Meta-parser parse_cfg.sh just calls specific parser basing on passed 
+model OID. At this time there are available parsers for D-Link L2 
+switches: DES-3526, DES-3028, DES-3528, DES-3200/A1, DES-3200-28F/C1 and 
+DES-1228/ME/B1A. These parsers don't cover all configuration, only most 
+used sections such as VLAN settings, ISM VLAN, limited multicast 
+settings, SNTP, syslog, basic SNMP traps, loopback detection, RADIUS 
+server settings and something more. All of these parsers' output 
+correspond default rules list (checker_rules.conf). When adding the whole 
+new parser or some new features in existing parsers don't forget either 
+add corresponding features in all other parsers, or define this option in 
+rules list as model-specified, otherwise you may encounter some 
+difficulties in usage. Result of parsers is stored in $tftp_root/dry/$IP. 
+"Dried" config is passed to checker.sh.
+
+Checker compares "dried" config with rules defined in checker_rules.conf 
+and returns mismatching entries.
+
+
+Installation
+------------
+
+At this moment there is no installation script. All shell-scripts must be 
+located in /usr/local/sbin, all .conf files, exclude_ip and exclude_model 
+must be located in /etc/isida. Edit .conf and exclude_* files for your 
+purposes, add entry with /usr/local/sbin/isida_poller.sh and take a rest. 
+Checker result could be find in /var/log/checker.log.
+
+
+Configuration and customization
+-------------------------------
+
+Isida's configuration files are:
+
+isida.conf - at now there is only one variable - tftp_root - path to 
+TFTP root, where downloaded configuration files are stored.
+
+model.conf - settings for each supported device model for 
+backup_config_L2.sh and parse_cfg.sh. A little bit more about contents 
+of this .conf file:
+	
+	Model - model name, as it named in its parser-script, it will be 
+	used in checker.sh.
+
+	Model OID - model SNMP identificator, as it outputs from 
+	get_model.sh, in other words SNMP OID sysObjectID without 
+	".1.3.6.1.4.1."-prefix.
+
+	Parser - complete path to parser for this model.
+
+	Ports - total number of physical interfaces.
+
+	agentStatusOperCfg_OID - enough said.
+
+	"proceeding" value - agentStatusOperCfg has several different 
+	results, here must be listed "in-process" result value.
+
+	upload_cmd - name of string variable with CLI command to upload 
+	configuration from device to server.
+
+	expect_cmd - name of string variable with script that converts 
+	file with CLI commands for this device into expect-script.
+
+exclude_ip - list of IP-addresses not to parse-and-check.
+
+exclude_model - list of model OIDs not to parse-and-check.
+
+checker_rules.conf - list of rules for checker.sh. Syntax information:
+	
+	# - comment
+
+	$ - model/firmware-dependent key/value, dependence must be 
+	followed by '^'. Rule can be inverted with '!'.  Example:
+	$DES-3526@6.20^igmp_acc_auth_enabled=access
+	
+	.x. - one of enumerated keys. Example: there can be many SNMP 
+	hosts, but one of them must have IP 192.168.1.120 and 'dlread' 
+	community
+	
+	:: - both of values are correct. Example: there is no 
+	difference, which of SNTP hosts is primary and which is 
+	secondary.
+	
+	trunk - ports with pvid=1.
+	
+	access - ports with pvid of vlan with the largest member ports 
+	count in.
+	
+	not_trunk - inverted 'trunk' port interval.
+	
+	not_access - inverted 'access' port interval.
+	
+	all_ports - all ports.
+
+Also there are some scripts called collapse_*.sh to simplify output for 
+some sophisticated options, such as ACL rules or ISM VLAN settings.
+
+
+Upcoming features
+-----------------
+
+TODO
+
+
+Where to get
+------------
+
+https://github.com/vlad-syan/isida
+
+
+Legal information
+-----------------
+
+This project licensed under GPLv2, legal notes are included in source directory
+
+Author: Vladimir Sarkisyan
