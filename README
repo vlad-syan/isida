@@ -62,11 +62,7 @@ and returns mismatching entries.
 Installation
 ------------
 
-At this moment there is no installation script. All shell-scripts must be 
-located in /usr/local/sbin, all .conf files, exclude_ip and exclude_model 
-must be located in /etc/isida. Edit .conf and exclude_* files for your 
-purposes, add entry with /usr/local/sbin/isida_poller.sh and take a rest. 
-Checker result could be find in /var/log/checker.log.
+Just run install.sh with root permission and proceed to configuration.
 
 
 Configuration and customization
