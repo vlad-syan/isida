@@ -73,7 +73,7 @@ if [ $result -eq 0 ]
 
 	if [ `grep -cw $model $exclude_model` ] && [ `grep -cw $ip $exclude_ip` -eq 0 ]
 		then
-		/usr/local/sbin/parse_cfg.sh $ip > $dry
+		/usr/local/sbin/meta-parse.sh $ip > $dry
 		echo `date +%F\ %T` 'BACKUP ['$$']:'" forwarded to checker" >> $log
 		/usr/local/sbin/checker.sh $dry >> $temp_check
 		cat $temp_check >> /var/log/checker.log

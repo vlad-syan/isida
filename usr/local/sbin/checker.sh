@@ -25,6 +25,7 @@ if [ ! -f $1 ]
 	exit 1
 fi
 
+ip=`echo $1 | awk -F'/' '{print $NF}'`
 cp $1 $cfg
 /usr/local/sbin/collapse_ism.sh $1 >> $cfg
 trunk=`grep "trunk" $cfg | cut -d '=' -f2`
@@ -32,14 +33,13 @@ model=`grep "model" $cfg | cut -d '=' -f2`
 fw=`grep "firmware" $cfg | cut -d '=' -f2`
 all='1-28'
 previous_sum=0
-echo -n `date +%F\ %T`" $1: "
+echo -n `date +%F\ %T`" $ip $model: "
 echo `date +%F\ %T` "CHECK: started checker with PID $$ on $1" >> $log
 
 for i in `grep "vlan_name=" $cfg | cut -d '=' -f2`
 	do
 	sum=0
-	ports=`grep "$i.untagged=" $cfg | cut -d '=' -f2 | xargs -l /usr/local/sbin/interval_to_string.sh | xargs -l 
-/usr/local/sbin/string_to_bitmask.sh`
+	ports=`grep "$i.untagged=" $cfg | cut -d '=' -f2 | xargs -l /usr/local/sbin/interval_to_string.sh | xargs -l /usr/local/sbin/string_to_bitmask.sh`
 
 	for j in $ports
 		do
@@ -66,27 +66,9 @@ not_trunk=`/usr/local/sbin/invert_string_interval.sh $trunk $port_count`
 not_access=`/usr/local/sbin/invert_string_interval.sh $access $port_count`
 all="1-$port_count"
 
-#case $model in
-#
-#	"DES-3200-10")	not_trunk=`/usr/local/sbin/invert_string_interval_10.sh $trunk`
-#			not_access=`/usr/local/sbin/invert_string_interval_10.sh $access`
-#			all='1-10';;
-#	"DES-3200-18")	not_trunk=`/usr/local/sbin/invert_string_interval_18.sh $trunk`
-#			not_access=`/usr/local/sbin/invert_string_interval_18.sh $access`
-#			all='1-18';;
-#	"DES-3200-26")	not_trunk=`/usr/local/sbin/invert_string_interval_26.sh $trunk`
-#			not_access=`/usr/local/sbin/invert_string_interval_26.sh $access`
-#			all='1-26';;
-#	"DES-3526")	not_trunk=`/usr/local/sbin/invert_string_interval_26.sh $trunk`
-#			not_access=`/usr/local/sbin/invert_string_interval_26.sh $access`
-#			all='1-26';;
-#	*)	not_trunk=`/usr/local/sbin/invert_string_interval_28.sh $trunk`
-#		not_access=`/usr/local/sbin/invert_string_interval_28.sh $access`;;
-#esac
-
 cat $rules_original | grep -v '#' | grep -v '\$' | sed -e s/=trunk/=$trunk/g -e s/=not_trunk/=$not_trunk/g -e s/=all_ports/=$all/g \
 	-e s/=access/=$access/g -e s/=not_access/=$not_access/g > $rules
-A
+
 for i in `grep '\$' $cfg | grep -v '#'`
 	do
 	condition=`echo $i | cut -d '=' -f1 | sed -e 's/\$//' -e 's/\!//'`
