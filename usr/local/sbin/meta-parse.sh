@@ -12,6 +12,7 @@ check_log='/var/log/checker.log'
 echo `date +%F\ %T`" PARSE: meta-parse.sh with PID $$ on ip $1 started" >> $log
 unknown=0
 parser=`grep $model $conf | awk '{print $3}'`
+tmp='/tmp/'`date +%N`'.chk'
 
 if [ -z "$parser" ]
     then
@@ -31,7 +32,10 @@ if [ $unknown -eq 0 ]
 		then
 		$parser $1
 		echo `date +%F\ %T` ' PARSE ['$$']:'" parsed cfg from $1, forwarded to checker" >> $log
-		/usr/local/sbin/checker.sh $path/dry_$1 >> $check_log
+		/usr/local/sbin/checker.sh $path/dry_$1 >> $tmp
+		cat $tmp >> $check_log
+		fix_args=`cat $tmp`
+		/usr/local/sbin/meta-fix.sh $fix_args 
 	fi
 
     fi

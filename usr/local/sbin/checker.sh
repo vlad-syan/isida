@@ -33,7 +33,6 @@ model=`grep "model" $cfg | cut -d '=' -f2`
 fw=`grep "firmware" $cfg | cut -d '=' -f2`
 all='1-28'
 previous_sum=0
-echo -n `date +%F\ %T`" $ip $model: "
 echo `date +%F\ %T` "CHECK: started checker with PID $$ on $1" >> $log
 
 for i in `grep "vlan_name=" $cfg | cut -d '=' -f2`
@@ -56,6 +55,7 @@ done
 
 access=`grep "$access_vlan.untagged=" $cfg | cut -d '=' -f2`
 port_count=`grep $model $conf | awk '{print $4}'`
+echo -n `date +%F\ %T`" $ip $model $rules $trunk $access $port_count: "
 
 if [ -z "$port_count" ]
 	then

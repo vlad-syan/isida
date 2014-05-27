@@ -46,7 +46,7 @@ if [ $count -gt 10 ]
 fi
 
 echo `date +%F\ %T` 'BACKUP ['$$']:'" $ip cfg download started ($count)" >> $log
-/usr/bin/expect -f $dummy_ex
+time /usr/bin/expect -f $dummy_ex
 
 
 if [ ! -s "$path/$ip" ]
@@ -77,6 +77,7 @@ if [ $result -eq 0 ]
 		echo `date +%F\ %T` 'BACKUP ['$$']:'" forwarded to checker" >> $log
 		/usr/local/sbin/checker.sh $dry >> $temp_check
 		cat $temp_check >> /var/log/checker.log
+		/usr/local/sbin/meta-fix.sh `cat $temp_check`
 	    else
 		echo `date +%F\ %T` 'BACKUP ['$$']:'" $ip in exclude-list" >> $log
 	fi
