@@ -20,7 +20,7 @@ not_trunk=`/usr/local/sbin/invert_string_interval.sh $trunk $port_count`
 # Traffic control
 traf_control_thold=`grep traffic_control_bcast_threshold $rules | cut -d= -f2`
 traffic_control_trap="config traffic control_trap both"
-traffic_control_string="config traffic control $access broadcast enable multicast enable action shutdown threshold $traf_control_thold time_interval 5 countdown 0\nconfig traffic control $not_access broadcast disable multicast disable action shutdown threshold $traf_control_thold time_interval 5 countdown 0"
+traffic_control_string="config traffic control $access broadcast enable multicast enable unicast disable action shutdown threshold $traf_control_thold time_interval 5 countdown 0\nconfig traffic control $not_access broadcast disable multicast disable unicast disable action shutdown threshold $traf_control_thold time_interval 5 countdown 0"
 
 # LBD
 if [ "`grep lbd_state $rules | cut -d= -f2`" = "enable" ]
@@ -33,6 +33,7 @@ fi
 
 lbd_on="config loopdetect ports $access state enabled"
 lbd_off="config loopdetect ports $not_access state disabled"
+lbd_trap="config loopdetect trap both"
 
 # Safeguard
 sg_state=`grep safeguard_state $rules | cut -d= -f2`
@@ -46,15 +47,15 @@ if [ "`grep safeguard_trap $rules | cut -d= -f2`" = "yes" ]
 	sg_trap="disable"
 fi
 
-safeguard_string="config safeguard_engine state $sg_state cpu_utilization rising_threshold $sg_rise falling_threshold $sg_fall trap_log $sg_trap"
+safeguard_string="config safeguard_engine state $sg_state cpu_utilization rising_threshold $sg_rise falling_threshold $sg_fall trap_log $sg_trap mode fuzzy"
 
 # Other
 snmp_traps="enable snmp traps\nenable snmp authenticate traps"
+link_trap="enable snmp linkchange_traps\nconfig snmp linkchange_traps ports all enable"
 dhcp_local_relay="disable dhcp_local_relay"
 dhcp_snooping="disable address_binding dhcp_snoop"
 impb_acl_mode="disable address_binding acl_mode"
-dhcp_screening="config filter dhcp_server ports $access state enable"
-netbios_filter="config filter netbios $access state enable"
+dhcp_screening="config filter dhcp_server ports $access state enable\nconfig filter dhcp_server ports $trunk state disable"
 impb_trap="enable address_binding trap_log"
 cpu_interface_filtering="enable cpu_interface_filtering"
 arp_aging_time="config arp_aging time `grep arp_aging_time $rules | cut -d= -f2`"
@@ -77,16 +78,17 @@ for i in $@
 		"lbd_state")				echo -e "$lbd_state" >> $raw_fix;;
 		"lbd_on")				echo -e "$lbd_on" >> $raw_fix;;
 		"lbd_off")				echo -e "$lbd_off" >> $raw_fix;;
+		"lbd_trap")				echo -e "$lbd_trap" >> $raw_fix;;
 		"safeguard_state")			echo -e "$safeguard_string" >> $raw_fix;;
 		"safeguard_trap")			echo -e "$safeguard_string" >> $raw_fix;;
 		"safeguard_rising")			echo -e "$safeguard_string" >> $raw_fix;;
 		"safeguard_falling")			echo -e "$safeguard_string" >> $raw_fix;;
 		"snmp_traps")				echo -e "$snmp_traps" >> $raw_fix;;
+		"link_trap")				echo -e "$link_trap" >> $raw_fix;;
 		"dhcp_local_relay")			echo -e "$dhcp_local_relay" >> $raw_fix;;
 		"dhcp_snooping")			echo -e "$dhcp_snooping" >> $raw_fix;;
 		"impb_acl_mode")			echo -e "$impb_acl_mode" >> $raw_fix;;
 		"dhcp_screening")			echo -e "$dhcp_screening" >> $raw_fix;;
-		"netbios_filter")			echo -e "$netbios_filter" >> $raw_fix;;
 		"impb_trap")				echo -e "$impb_trap" >> $raw_fix;;
 		"cpu_interface_filtering")		echo -e "$cpu_interface_filter" >> $raw_fixing;;
 		"arp_aging_time")			echo -e "$arp_aging_time" >> $raw_fix;;

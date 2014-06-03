@@ -256,7 +256,7 @@ echo "safeguard_falling=$fall"
 
 grep -w "filter" $ascii | grep "enable" > $filter
 filter_dhcp=`grep "dhcp_server" $filter | awk '{print $5}'`
-filter_netbios=`grep -w "netbios" $filter | awk -Fstate '{print $2}' | awk '{print $1}'`
+filter_netbios=`grep -w "netbios" $filter | grep -v "extensive" | awk -Fnetbios '{print $2}' | awk '{print $1}'`
 echo "dhcp_screening=$filter_dhcp"
 echo "netbios_filter=$filter_netbios"
 

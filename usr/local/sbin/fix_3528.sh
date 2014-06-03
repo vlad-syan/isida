@@ -20,7 +20,19 @@ not_trunk=`/usr/local/sbin/invert_string_interval.sh $trunk $port_count`
 # Traffic control
 traf_control_thold=`grep traffic_control_bcast_threshold $rules | cut -d= -f2`
 traffic_control_trap="config traffic control_trap both"
-traffic_control_string="config traffic control $access broadcast enable multicast enable action shutdown threshold $traf_control_thold time_interval 5 countdown 0\nconfig traffic control $not_access broadcast disable multicast disable action shutdown threshold $traf_control_thold time_interval 5 countdown 0"
+access_ports="`/usr/local/sbin/interval_to_string.sh $access`"
+not_access_ports="`/usr/local/sbin/interval_to_string.sh $not_access`"
+traffic_control_string=""
+
+for i in $access_ports
+	do
+	traffic_control_string=$traffic_control_string"\nconfig traffic control $i broadcast enable multicast enable unicast disable action drop broadcast_threshold $traf_control_thold multicast_threshold 128 unicast_threshold 131072 countdown 0 time_interval 5"
+done
+
+for i in $not_access_ports
+	do
+	traffic_control_string=$traffic_control_string"\nconfig traffic control $i broadcast disable multicast disable unicast disable action drop broadcast_threshold $traf_control_thold multicast_threshold 128 unicast_threshold 131072 countdown 0 time_interval 5"
+done
 
 # LBD
 if [ "`grep lbd_state $rules | cut -d= -f2`" = "enable" ]
@@ -30,9 +42,22 @@ if [ "`grep lbd_state $rules | cut -d= -f2`" = "enable" ]
 	lbd_state="disable loopdetect"
 fi
 
+lbd_trap="config loopdetect trap `grep lbd_trap $rules | cut -d= -f2`"
+lbd_on=""
 
-lbd_on="config loopdetect ports $access state enabled"
-lbd_off="config loopdetect ports $not_access state disabled"
+for i in $access_ports
+	do
+	lbd_on=$lbd_on"\nconfig loopdetect ports $i state enable"
+done
+
+lbd_off=""
+
+for i in $not_access_ports
+	do
+	lbd_off=$lbd_off"\nconfig loopdetect ports $i state disable"
+done
+
+#lbd_off="config loopdetect ports $not_access state disabled"
 
 # Safeguard
 sg_state=`grep safeguard_state $rules | cut -d= -f2`
@@ -46,18 +71,19 @@ if [ "`grep safeguard_trap $rules | cut -d= -f2`" = "yes" ]
 	sg_trap="disable"
 fi
 
-safeguard_string="config safeguard_engine state $sg_state cpu_utilization rising_threshold $sg_rise falling_threshold $sg_fall trap_log $sg_trap"
+safeguard_string="config safeguard_engine state $sg_state cpu_utilization rising_threshold $sg_rise falling_threshold $sg_fall trap_log $sg_trap mode fuzzy"
 
 # Other
 snmp_traps="enable snmp traps\nenable snmp authenticate traps"
 dhcp_local_relay="disable dhcp_local_relay"
 dhcp_snooping="disable address_binding dhcp_snoop"
 impb_acl_mode="disable address_binding acl_mode"
-dhcp_screening="config filter dhcp_server ports $access state enable"
-netbios_filter="config filter netbios $access state enable"
+dhcp_screening="config filter dhcp_server ports all state disable\nconfig filter dhcp_server ports $access state enable"
+netbios_filter="config filter netbios all state disable\nconfig filter netbios $access state enable"
 impb_trap="enable address_binding trap_log"
 cpu_interface_filtering="enable cpu_interface_filtering"
 arp_aging_time="config arp_aging time `grep arp_aging_time $rules | cut -d= -f2`"
+link_trap="enable snmp linkchange_traps\nconfig snmp linkchange_traps ports 1-28 enable"
 
 # SNTP
 sntp_addr1=`grep sntp_primary $rules | cut -d= -f2 | awk -F:: '{print $1}'`
@@ -77,6 +103,7 @@ for i in $@
 		"lbd_state")				echo -e "$lbd_state" >> $raw_fix;;
 		"lbd_on")				echo -e "$lbd_on" >> $raw_fix;;
 		"lbd_off")				echo -e "$lbd_off" >> $raw_fix;;
+		"lbd_trap")				echo -e "$lbd_trap" >> $raw_fix;;
 		"safeguard_state")			echo -e "$safeguard_string" >> $raw_fix;;
 		"safeguard_trap")			echo -e "$safeguard_string" >> $raw_fix;;
 		"safeguard_rising")			echo -e "$safeguard_string" >> $raw_fix;;
@@ -88,11 +115,12 @@ for i in $@
 		"dhcp_screening")			echo -e "$dhcp_screening" >> $raw_fix;;
 		"netbios_filter")			echo -e "$netbios_filter" >> $raw_fix;;
 		"impb_trap")				echo -e "$impb_trap" >> $raw_fix;;
-		"cpu_interface_filtering")		echo -e "$cpu_interface_filter" >> $raw_fixing;;
+		"cpu_interface_filtering")		echo -e "$cpu_interface_filter >> $raw_fixing";;
 		"arp_aging_time")			echo -e "$arp_aging_time" >> $raw_fix;;
 		"sntp_state")				echo -e "$sntp_string" >> $raw_fix;;
 		"sntp_primary")				echo -e "$sntp_string" >> $raw_fix;;
 		"sntp_secondary")			echo -e "$sntp_string" >> $raw_fix;;
+		"link_trap")				echo -e "$link_trap" >> $raw_fix;;
 	esac
 
 done
