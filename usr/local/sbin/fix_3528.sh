@@ -125,4 +125,7 @@ for i in $@
 
 done
 
-cat $raw_fix | uniq
+fix_cmd='/tmp/'`date +%s%N`'_fix'
+cat $raw_fix | uniq > $fix_cmd
+rm -f $raw_fix $rules
+
