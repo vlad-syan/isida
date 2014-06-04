@@ -115,7 +115,7 @@ for i in $@
 		"dhcp_screening")			echo -e "$dhcp_screening" >> $raw_fix;;
 		"netbios_filter")			echo -e "$netbios_filter" >> $raw_fix;;
 		"impb_trap")				echo -e "$impb_trap" >> $raw_fix;;
-		"cpu_interface_filtering")		echo -e "$cpu_interface_filter >> $raw_fixing";;
+		"cpu_interface_filtering")		echo -e "$cpu_interface_filter" >> $raw_fixing;;
 		"arp_aging_time")			echo -e "$arp_aging_time" >> $raw_fix;;
 		"sntp_state")				echo -e "$sntp_string" >> $raw_fix;;
 		"sntp_primary")				echo -e "$sntp_string" >> $raw_fix;;
