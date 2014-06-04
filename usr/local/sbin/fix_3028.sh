@@ -53,9 +53,7 @@ snmp_traps="enable snmp traps\nenable snmp authenticate traps"
 link_trap="enable snmp linkchange_traps\nconfig snmp linkchange_traps ports all enable"
 dhcp_local_relay="disable dhcp_local_relay"
 dhcp_snooping="disable address_binding dhcp_snoop"
-#impb_acl_mode="disable address_binding acl_mode"
 dhcp_screening="config filter dhcp_server ports $access state enable"
-#netbios_filter="config filter netbios $access state enable"
 impb_trap="enable address_binding trap_log"
 cpu_interface_filtering="enable cpu_interface_filtering"
 arp_aging_time="config arp_aging time `grep arp_aging_time $rules | cut -d= -f2`"
@@ -64,6 +62,18 @@ arp_aging_time="config arp_aging time `grep arp_aging_time $rules | cut -d= -f2`
 sntp_addr1=`grep sntp_primary $rules | cut -d= -f2 | awk -F:: '{print $1}'`
 sntp_addr2=`grep sntp_primary $rules | cut -d= -f2 | awk -F:: '{print $2}'`
 sntp_string="enable sntp\nconfig sntp primary $sntp_addr1 secondary $sntp_addr2 poll-inteval 720"
+
+# IGMP acc auth
+igmp_acc_auth_enabled="config igmp access_authentication ports $access state enable"
+igmp_acc_auth_disabled="config igmp access_authentication ports $not_access state disable"
+
+# Mcast filter
+range1="config limited_multicast_addr ports $access add profile_id 1\nconfig limited_multicast_addr ports $not_access delete profile_id 1"
+range2="config limited_multicast_addr ports $access add profile_id 2\nconfig limited_multicast_addr ports $not_access delete profile_id 2"
+range3="config limited_multicast_addr ports $access add profile_id 3\nconfig limited_multicast_addr ports $not_access delete profile_id 3"
+range4="config limited_multicast_addr ports $access add profile_id 4\nconfig limited_multicast_addr ports $not_access delete profile_id 4"
+range5="config limited_multicast_addr ports $access add profile_id 5\nconfig limited_multicast_addr ports $not_access delete profile_id 5"
+
 
 
 for i in $@
@@ -93,6 +103,13 @@ for i in $@
 		"sntp_state")				echo -e "$sntp_string" >> $raw_fix;;
 		"sntp_primary")				echo -e "$sntp_string" >> $raw_fix;;
 		"sntp_secondary")			echo -e "$sntp_string" >> $raw_fix;;
+                "igmp_acc_auth_enabled")                echo -e "$igmp_acc_auth_enabled" >> $raw_fix;;
+                "igmp_acc_auth_disabled")               echo -e "$igmp_acc_auth_disabled" >> $raw_fix;;
+		"mcast_range.iptv1")			echo -e "$range1" >> $raw_fix;;
+		"mcast_range.iptv2")			echo -e "$range2" >> $raw_fix;;
+		"mcast_range.iptv3")			echo -e "$range3" >> $raw_fix;;
+		"mcast_range.iptv4")			echo -e "$range4" >> $raw_fix;;
+		"mcast_range.iptv5")			echo -e "$range5" >> $raw_fix;;
 	esac
 
 done

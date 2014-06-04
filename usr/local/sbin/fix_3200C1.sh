@@ -26,12 +26,12 @@ traffic_control_string=""
 
 for i in $access_ports
 	do
-	traffic_control_string=$traffic_control_string"\nconfig traffic control $i broadcast enable multicast enable unicast disable action drop broadcast_threshold $traf_control_thold multicast_threshold 128 unicast_threshold 131072 countdown 0 time_interval 5"
+	traffic_control_string=$traffic_control_string"\nconfig traffic control $i broadcast enable multicast enable action drop threshold $traf_control_thold countdown 0 time_interval 5"
 done
 
 for i in $not_access_ports
 	do
-	traffic_control_string=$traffic_control_string"\nconfig traffic control $i broadcast disable multicast disable unicast disable action drop broadcast_threshold $traf_control_thold multicast_threshold 128 unicast_threshold 131072 countdown 0 time_interval 5"
+	traffic_control_string=$traffic_control_string"\nconfig traffic control $i broadcast disable multicast disable action drop threshold $traf_control_thold countdown 0 time_interval 5"
 done
 
 # LBD
@@ -90,6 +90,20 @@ sntp_addr1=`grep sntp_primary $rules | cut -d= -f2 | awk -F:: '{print $1}'`
 sntp_addr2=`grep sntp_primary $rules | cut -d= -f2 | awk -F:: '{print $2}'`
 sntp_string="enable sntp\nconfig sntp primary $sntp_addr1 secondary $sntp_addr2 poll-inteval 720"
 
+# IGMP acc auth
+igmp_acc_auth_enabled="config igmp access_authentication ports $access state enable"
+igmp_acc_auth_disabled="config igmp access_authentication ports $not_access state disable"
+
+# Limited mcast
+range1="config limited_multicast_addr ports $access add profile_id 1\nconfig limited_multicast_addr ports $not_access delete profile_id 1"
+range2="config limited_multicast_addr ports $access add profile_id 2\nconfig limited_multicast_addr ports $not_access delete profile_id 2"
+range3="config limited_multicast_addr ports $access add profile_id 3\nconfig limited_multicast_addr ports $not_access delete profile_id 3"
+range4="config limited_multicast_addr ports $access add profile_id 4\nconfig limited_multicast_addr ports $not_access delete profile_id 4"
+range5="config limited_multicast_addr ports $access add profile_id 5\nconfig limited_multicast_addr ports $not_access delete profile_id 5"
+limited_access="config limited_multicast_addr ports $access access permit"
+limited_deny="config limited_multicast_addr ports $trunk access deny"
+
+
 
 for i in $@
 	do
@@ -121,6 +135,13 @@ for i in $@
 		"sntp_primary")				echo -e "$sntp_string" >> $raw_fix;;
 		"sntp_secondary")			echo -e "$sntp_string" >> $raw_fix;;
 		"link_trap")				echo -e "$link_trap" >> $raw_fix;;
+                "mcast_range.iptv1")                    echo -e "$range1\n$limited_access\n$limited_deny" >> $raw_fix;;
+                "mcast_range.iptv2")                    echo -e "$range2\n$limited_access\n$limited_deny" >> $raw_fix;;
+                "mcast_range.iptv3")                    echo -e "$range3\n$limited_access\n$limited_deny" >> $raw_fix;;
+                "mcast_range.iptv4")                    echo -e "$range4\n$limited_access\n$limited_deny" >> $raw_fix;;
+                "mcast_range.iptv5")                    echo -e "$range5\n$limited_access\n$limited_deny" >> $raw_fix;;
+                "igmp_acc_auth_enabled")                echo -e "$igmp_acc_auth_enabled" >> $raw_fix;;
+                "igmp_acc_auth_disabled")               echo -e "$igmp_acc_auth_disabled" >> $raw_fix;;
 	esac
 
 done

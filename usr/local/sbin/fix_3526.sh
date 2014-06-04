@@ -64,6 +64,18 @@ sntp_addr1=`grep sntp_primary $rules | cut -d= -f2 | awk -F:: '{print $1}'`
 sntp_addr2=`grep sntp_primary $rules | cut -d= -f2 | awk -F:: '{print $2}'`
 sntp_string="enable sntp\nconfig sntp primary $sntp_addr1 secondary $sntp_addr2 poll-inteval 720"
 
+# IGMP acc auth
+igmp_acc_auth_enabled="config igmp access_authentication ports $access state enable"
+igmp_acc_auth_disabled="config igmp access_authentication ports $not_access state disable"
+
+# Limited mcast
+range1="config limited_multicast_addr ports $access add multicast_range iptv1"
+range2="config limited_multicast_addr ports $access add multicast_range iptv2"
+range3="config limited_multicast_addr ports $access add multicast_range iptv3"
+range4="config limited_multicast_addr ports $access add multicast_range iptv4"
+range5="config limited_multicast_addr ports $access add multicast_range iptv5"
+limited_access="config limited_multicast_addr ports $access access permit state enable"
+limited_deny="config limited_multicast_addr ports $trunk access deny state disable"
 
 for i in $@
 	do
@@ -93,6 +105,13 @@ for i in $@
 		"sntp_state")				echo -e "$sntp_string" >> $raw_fix;;
 		"sntp_primary")				echo -e "$sntp_string" >> $raw_fix;;
 		"sntp_secondary")			echo -e "$sntp_string" >> $raw_fix;;
+		"mcast_range.iptv1")			echo -e "$range1\n$limited_access\n$limited_deny" >> $raw_fix;;
+		"mcast_range.iptv2")			echo -e "$range2\n$limited_access\n$limited_deny" >> $raw_fix;;
+		"mcast_range.iptv3")			echo -e "$range3\n$limited_access\n$limited_deny" >> $raw_fix;;
+		"mcast_range.iptv4")			echo -e "$range4\n$limited_access\n$limited_deny" >> $raw_fix;;
+                "mcast_range.iptv5")                    echo -e "$range5\n$limited_access\n$limited_deny" >> $raw_fix;;
+		"igmp_acc_auth_enabled")		echo -e "$igmp_acc_auth_enabled" >> $raw_fix;;
+		"igmp_acc_auth_disabled")		echo -e "$igmp_acc_auth_disabled" >> $raw_fix;;
 	esac
 
 done
