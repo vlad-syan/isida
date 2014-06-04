@@ -78,12 +78,12 @@ if [ $result -eq 0 ]
 		/usr/local/sbin/checker.sh $dry >> $temp_check
 		cat $temp_check >> /var/log/checker.log
 		/usr/local/sbin/meta-fix.sh `cat $temp_check`
+		rm -f $temp_check
 	    else
 		echo `date +%F\ %T` 'BACKUP ['$$']:'" $ip in exclude-list" >> $log
 	fi
 fi
 
 echo `date +%F\ %T` 'BACKUP ['$$']:'" ends" >> $log
-rm -f $dummy_ex $dummy_cmd 
-#$temp_check
+rm -f $dummy_ex $dummy_cmd
 

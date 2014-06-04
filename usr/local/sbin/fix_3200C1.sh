@@ -147,6 +147,6 @@ for i in $@
 done
 
 fix_cmd='/tmp/'`date +%s%N`'_fix'
-cat $raw_fix | uniq > $fix_cmd
-rm -f $raw_fix $rules
+cat $raw_fix | uniq 
+rm -f $rules
 
