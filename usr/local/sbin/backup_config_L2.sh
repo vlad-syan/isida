@@ -84,5 +84,6 @@ if [ $result -eq 0 ]
 fi
 
 echo `date +%F\ %T` 'BACKUP ['$$']:'" ends" >> $log
-rm -f $dummy_ex $dummy_cmd $temp_check
+rm -f $dummy_ex $dummy_cmd 
+#$temp_check
 

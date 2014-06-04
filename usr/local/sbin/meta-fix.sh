@@ -11,6 +11,6 @@ ip=$3
 model=$4
 str=`echo $@ | sed -e s/$1// -e s/$2// -e s/$3// -e s/$4//`
 fix_cmd=`grep $model $conf | awk '{print $9}'`
-echo `date +%F\ %T`' FIX ['$$']:' $ip get to meta-fix.sh with \"$str\", model $model
+echo `date +%F\ %T`' FIX ['$$']:' $ip get to meta-fix.sh with \"$str\", model $model >> $log
 $fix_cmd $ip $str
-echo `date +%F\ %T`' FIX ['$$']: done'
+echo `date +%F\ %T`' FIX ['$$']: done' >> $log
