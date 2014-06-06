@@ -66,8 +66,7 @@ not_trunk=`/usr/local/sbin/invert_string_interval.sh $trunk $port_count`
 not_access=`/usr/local/sbin/invert_string_interval.sh $access $port_count`
 all="1-$port_count"
 
-cat $rules_original | grep -v '#' | grep -v '\$' | sed -e s/=trunk/=$trunk/g -e s/=not_trunk/=$not_trunk/g -e s/=all_ports/=$all/g \
-	-e s/=access/=$access/g -e s/=not_access/=$not_access/g > $rules
+cat $rules_original | grep -v '#' | grep -v '\$' | sed -e s/=trunk/=$trunk/g -e s/=not_trunk/=$not_trunk/g -e s/=all_ports/=$all/g -e s/=access/=$access/g -e s/=not_access/=$not_access/g > $rules
 
 for i in `grep '\$' $cfg | grep -v '#'`
 	do
