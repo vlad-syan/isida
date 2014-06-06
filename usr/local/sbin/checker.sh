@@ -68,7 +68,7 @@ all="1-$port_count"
 
 cat $rules_original | grep -v '#' | grep -v '\$' | sed -e s/=trunk/=$trunk/g -e s/=not_trunk/=$not_trunk/g -e s/=all_ports/=$all/g -e s/=access/=$access/g -e s/=not_access/=$not_access/g > $rules
 
-for i in `grep '\$' $cfg | grep -v '#'`
+for i in `grep '\$' $rules_original | grep -v '#'`
 	do
 	condition=`echo $i | cut -d '=' -f1 | sed -e 's/\$//' -e 's/\!//'`
 	condition_model=`echo $condition | cut -d '^' -f1 | awk -F'@' '{print $1}'`
@@ -202,6 +202,6 @@ for i in `grep "unknown" $cfg`
 	echo -n `echo $i | cut -d '=' -f1`" "
 done
 
-#rm $cfg 2>/dev/null
+rm $cfg 2>/dev/null
 echo
 echo `date +%F\ %T` 'CHECK ['$$']:'" ends" >> $log

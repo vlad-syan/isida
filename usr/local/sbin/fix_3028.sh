@@ -116,5 +116,5 @@ done
 
 fix_cmd='/tmp/'`date +%s%N`'_fix'
 cat $raw_fix | uniq
-rm -f $rules
+rm -f $rules $raw_fix
 

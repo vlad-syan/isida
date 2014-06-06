@@ -78,6 +78,8 @@ range5="config limited_multicast_addr ports $access add profile_id 5\nconfig lim
 limited_access="config limited_multicast_addr ports $access access permit"
 limited_deny="config limited_multicast_addr ports $trunk access deny"
 
+# SYSLOG
+
 for i in $@
 	do
 
@@ -120,4 +122,4 @@ done
 
 fix_cmd='/tmp/'`date +%s%N`'_fix'
 cat $raw_fix | uniq
-rm -f $rules
+rm -f $rules $raw_fix
