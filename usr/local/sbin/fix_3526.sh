@@ -5,7 +5,10 @@ if [ -z $1 ]
 	exit 0
 fi
 
+general_rules='/etc/isida/isida.conf'
 ip=$1
+get_uplink=`grep 'uplink' $general_rules | cut -d= -f2 | sed -e s/%ip/$ip/`
+ism_vlanid=`grep 'ism_vlanid' $general_rules | cut -d= -f2`
 rules=$2
 trunk=$3
 access=$4
@@ -148,6 +151,13 @@ for i in $@
                 "igmp_snooping")                        echo -e "$igmp_snooping" >> $raw_fix;;
                 "syslog_enabled")                       echo -e "$syslog_enabled" >> $raw_fix;;
                 "link_trap")                            echo -e "$link_trap" >> $raw_fix;;
+		"ism")					if [ `/usr/local/sbin/ping_equip.sh $ip` -eq 1 ]
+								then
+								raw_member=`snmpwalk -v2c -c dlread -Ovq $ip .1.3.6.1.4.1.171.11.64.1.2.10.6.1.4 | sed -e s/\"//g -e s/\ //g | xargs -l /usr/local/sbin/portconv.sh`
+								member=`/usr/local/sbin/string_to_bitmask.sh $raw_member | xargs -l /usr/local/sbin/bitmask_to_interval.sh`
+								ism_name=`snmpget -v2c -c dlread -Ovq $ip .1.3.6.1.4.1.171.11.64.1.2.10.6.1.2.$ism_vlanid | sed -e s/\"//g`
+								echo -e "config igmp_snooping multicast_vlan $ism_name member $member source $trunk" >> $raw_fix
+							fi;;
 	esac
 
 done
