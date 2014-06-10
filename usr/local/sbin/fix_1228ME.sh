@@ -59,6 +59,7 @@ dhcp_screening="config filter dhcp_server ports $access state enable\nconfig fil
 impb_trap="enable address_binding trap_log"
 cpu_interface_filtering="enable cpu_interface_filtering"
 arp_aging_time="config arp_aging time `grep arp_aging_time $rules | cut -d= -f2`"
+igmp_snooping="enable igmp_snooping"
 
 # SNTP
 sntp_addr1=`grep sntp_primary $rules | cut -d= -f2 | awk -F:: '{print $1}'`
@@ -79,6 +80,30 @@ limited_access="config limited_multicast_addr ports $access access permit"
 limited_deny="config limited_multicast_addr ports $trunk access deny"
 
 # SYSLOG
+syslog_ip=`grep 'syslog_host.x.ip' $rules | cut -d= -f2`
+syslog_severity=`grep 'syslog_host.x.severity' $rules | cut -d= -f2`
+syslog_facility=`grep 'syslog_host.x.facility' $rules | cut -d= -f2`
+syslog_state=`grep 'syslog_host.x.state' $rules | cut -d= -f2`
+syslog_del="delete syslog host 2"
+syslog_add="create syslog host 2 ipaddress $syslog_ip severity $syslog_severity facility $syslog_facility state $syslog_state"
+syslog_enabled="enable_syslog"
+
+# SNMP
+snmp_ip=`grep 'snmp_host.x.ip' $rules | cut -d= -f2`
+snmp_community=`grep 'snmp_host.x.community' $rules | cut -d= -f2`
+snmp_del="delete snmp host $snmp_ip"
+snmp_add="create snmp host $snmp_ip v2c $snmp_community"
+
+# RADIUS
+radius_ip=`grep 'radius.x.ip' $rules | cut -d= -f2`
+radius_key=`grep 'radius.x.key' $rules | cut -d= -f2`
+radius_auth=`grep 'radius.x.auth' $rules | cut -d= -f2`
+radius_acct=`grep 'radius.x.acct' $rules | cut -d= -f2`
+radius_retransmit=`grep 'radius_retransmit' $rules | cut -d= -f2`
+radius_timeout=`grep 'radius_timeout' $rules | cut -d= -f2`
+radius_del="config radius delete 1"
+radius_add="config radius add 1 $radius_ip key $radius_key auth_port $radius_auth acct_port $radius_acct"
+radius_params="config radius parameter timeout $radius_timeout retransmit $radius_retransmit"
 
 for i in $@
 	do
@@ -116,10 +141,23 @@ for i in $@
                 "mcast_range.iptv5")                    echo -e "$range5\n$limited_access\n$limited_deny" >> $raw_fix;;
                 "igmp_acc_auth_enabled")                echo -e "$igmp_acc_auth_enabled" >> $raw_fix;;
                 "igmp_acc_auth_disabled")               echo -e "$igmp_acc_auth_disabled" >> $raw_fix;;
+		"syslog"				echo -e "$syslog_del\n$syslog_add" >> $raw_fix;;
+		"snmp"					echo -e "$snmp_del\n$snmp_add" >> $raw_fix;;
+		"radius"				echo -e "$radius_del\n$radius_add" >> $raw_fix;;
+		"radius_retransmit"			echo -e "$radius_params" >> $raw_fix;;
+		"radius_timeout"			echo -e "$radius_params" >> $raw_fix;;
+		"igmp_snooping"				echo -e "$igmp_snooping" >> $raw_fix;;
+		"syslog_enabled"			echo -e "$syslog_enabled" >> $raw_fix;;
 	esac
 
 done
 
 fix_cmd='/tmp/'`date +%s%N`'_fix'
+
+if [ -s $raw_fix ]
+        then
+        echo "save" >> $raw_fix
+fi
+
 cat $raw_fix | uniq
 rm -f $rules $raw_fix
