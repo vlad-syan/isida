@@ -29,11 +29,13 @@ done
 
 fix_cmd=`grep $model $conf | awk '{print $9}'`
 echo `date +%F\ %T`' FIX ['$$']:' $ip get to meta-fix.sh with \"$str\", model $model >> $log
-$fix_cmd $ip $str > $fix
+$fix_cmd $ip $str | awk '! a[$0]++' > $fix
 
 if [ -s $fix ]
 	then
 	$expect_cmd $fix > $fix_ex
+	chmod +x $fix_ex
+	$fix_ex
 	echo `date +%F\ %T`' FIX ['$$']: done, expect script created' >> $log
 	else
 	echo `date +%F\ %T`' FIX ['$$']: done, nothing to fix' >> $log

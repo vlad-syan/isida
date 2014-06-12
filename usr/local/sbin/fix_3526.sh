@@ -70,7 +70,7 @@ syslog_severity=`grep 'syslog_host.x.severity' $rules | cut -d= -f2`
 syslog_facility=`grep 'syslog_host.x.facility' $rules | cut -d= -f2`
 syslog_state=`grep 'syslog_host.x.state' $rules | cut -d= -f2`
 syslog_del="delete syslog host 2"
-syslog_add="create syslog host 2 ipaddress $syslog_ip severity $syslog_severity facility $syslog_facility state $syslog_state"
+syslog_add="create syslog host 2 ipaddress $syslog_ip severity all facility $syslog_facility state $syslog_state"
 syslog_enabled="enable_syslog"
 
 # SNMP
@@ -93,7 +93,7 @@ radius_params="config radius parameter timeout $radius_timeout retransmit $radiu
 # SNTP
 sntp_addr1=`grep sntp_primary $rules | cut -d= -f2 | awk -F:: '{print $1}'`
 sntp_addr2=`grep sntp_primary $rules | cut -d= -f2 | awk -F:: '{print $2}'`
-sntp_string="enable sntp\nconfig sntp primary $sntp_addr1 secondary $sntp_addr2 poll-inteval 720"
+sntp_string="enable sntp\nconfig sntp primary $sntp_addr1 secondary $sntp_addr2 poll-interval 720"
 
 # IGMP acc auth
 igmp_acc_auth_enabled="config igmp access_authentication ports $access state enable"
@@ -143,7 +143,7 @@ for i in $@
                 "mcast_range.iptv5")                    echo -e "$range5\n$limited_access\n$limited_deny" >> $raw_fix;;
 		"igmp_acc_auth_enabled")		echo -e "$igmp_acc_auth_enabled" >> $raw_fix;;
 		"igmp_acc_auth_disabled")		echo -e "$igmp_acc_auth_disabled" >> $raw_fix;;
-                "syslog")				echo -e "$syslog_del\n$syslog_add" >> $raw_fix;;
+                "syslog_host")				echo -e "$syslog_del\n$syslog_add" >> $raw_fix;;
                 "snmp")                                 echo -e "$snmp_del\n$snmp_add" >> $raw_fix;;
                 "radius")                               echo -e "$radius_del\n$radius_add" >> $raw_fix;;
                 "radius_retransmit")                    echo -e "$radius_params" >> $raw_fix;;

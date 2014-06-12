@@ -4,7 +4,9 @@ if [ -z $1 ]
 	then
 	exit 0
 fi
-path=`grep 'tftp_root' /etc/isida/isida.conf | cut -d '=' -f2`
+
+general_rules='/etc/isida/isida.conf'
+path=`grep 'tftp_root' $general_rules | cut -d '=' -f2`
 model=`/usr/local/sbin/get_model.sh $1`
 conf='/etc/isida/model.conf'
 log='/var/log/isida.log'

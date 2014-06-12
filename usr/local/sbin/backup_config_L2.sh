@@ -4,6 +4,7 @@ model=$2
 conf='/etc/isida/model.conf'
 general_conf='/etc/isida/isida.conf'
 path=`grep "tftp_root" $general_conf | awk -F= '{print $2}'`
+get_uplink=`grep 'uplink' $general_conf | cut -d= -f2 | sed -e s/%ip/$ip/`
 dry=$path/dry/$ip
 log='/var/log/isida.log'
 temp_check='/tmp/'`date +%s%N`'.check'
@@ -19,6 +20,7 @@ if [ "`/usr/local/sbin/ping_equip.sh $ip`" = "0" ]
 	exit 0
 fi
 
+uplink=`$get_uplink`
 command_id=`grep $model $conf | awk '{print $7}'`
 command=`grep "$command_id=" $conf | awk -F= '{print $2}' | sed -e s/%ip/$ip/`
 echo "$command" > $dummy_cmd
@@ -75,10 +77,20 @@ if [ $result -eq 0 ]
 		then
 		/usr/local/sbin/meta-parse.sh $ip > $dry
 		echo `date +%F\ %T` 'BACKUP ['$$']:'" forwarded to checker" >> $log
-		/usr/local/sbin/checker.sh $dry >> $temp_check
-		cat $temp_check >> /var/log/checker.log
-		/usr/local/sbin/meta-fix.sh `cat $temp_check`
-		rm -f $temp_check
+		/usr/local/sbin/checker.sh $dry $uplink >> $temp_check
+
+		if [ $? -eq 0 ]
+			then
+			cat $temp_check >> /var/log/checker.log
+			/usr/local/sbin/meta-fix.sh `cat $temp_check`
+			rm -f $temp_check
+		elif [ $? -eq 1 ]
+			then
+			echo `date +%F\ %T` 'BACKUP ['$$']:'" something wrong with dry config" >> $log
+		else
+			echo `date +%F\ %T` 'BACKUP ['$$']:'" something wrong with checker" >> $log
+		fi
+
 	    else
 		echo `date +%F\ %T` 'BACKUP ['$$']:'" $ip in exclude-list" >> $log
 	fi

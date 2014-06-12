@@ -25,6 +25,13 @@ if [ ! -f $1 ]
 	exit 1
 fi
 
+if [ -z $2 ]
+	then
+	echo "No uplink specified!"
+	exit 2
+fi
+
+uplink=$2
 ip=`echo $1 | awk -F'/' '{print $NF}'`
 cp $1 $cfg
 /usr/local/sbin/collapse_ism.sh $1 >> $cfg
@@ -66,7 +73,7 @@ not_trunk=`/usr/local/sbin/invert_string_interval.sh $trunk $port_count`
 not_access=`/usr/local/sbin/invert_string_interval.sh $access $port_count`
 all="1-$port_count"
 
-cat $rules_original | grep -v '#' | grep -v '\$' | sed -e s/=trunk/=$trunk/g -e s/=not_trunk/=$not_trunk/g -e s/=all_ports/=$all/g -e s/=access/=$access/g -e s/=not_access/=$not_access/g > $rules
+cat $rules_original | grep -v '#' | grep -v '\$' | sed -e s/=trunk/=$trunk/g -e s/=not_trunk/=$not_trunk/g -e s/=all_ports/=$all/g -e s/=access/=$access/g -e s/=not_access/=$not_access/g -e s/=uplink/=$uplink/g > $rules
 
 for i in `grep '\$' $rules_original | grep -v '#'`
 	do
@@ -100,13 +107,13 @@ for i in `grep '\$' $rules_original | grep -v '#'`
 	if [ $negative -eq 0 ] && [ $match -eq 2 ]
 		then
 		echo $condition_cfg | sed -e s/=trunk/=$trunk/g -e s/=not_trunk/=$not_trunk/g \
-			-e s/=all/=$all/g -e s/=not_access/=$not_access/g -e s/=access/=$access/g >> $rules
+			-e s/=all/=$all/g -e s/=not_access/=$not_access/g -e s/=access/=$access/g -e s/=uplink/=$uplink/g >> $rules
 	fi
 
 	if [ $negative -eq 1 ] && [ $match -lt 2 ]
 		then
                 echo $condition_cfg | sed -e s/=trunk/=$trunk/g -e s/=not_trunk/=$not_trunk/g \
-			-e s/=all/=$all/g -e s/=access/=$access/g -e s/=not_access/=$not_access/g >> $rules
+			-e s/=all/=$all/g -e s/=access/=$access/g -e s/=not_access/=$not_access/g -e s/=uplink/=$uplink/g >> $rules
 	fi
 
 done

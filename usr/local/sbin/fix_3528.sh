@@ -9,6 +9,9 @@ ip=$1
 rules=$2
 trunk=$3
 access=$4
+general_rules='/etc/isida/isida.conf'
+get_uplink=`grep 'uplink' $general_rules | cut -d= -f2 | sed -e s/%ip/$ip/`
+ism_vlanid=`grep 'ism_vlanid' $general_rules | cut -d= -f2`
 port_count=`echo $5 | sed -e s/://`
 args=''
 count=0
@@ -71,7 +74,7 @@ if [ "`grep safeguard_trap $rules | cut -d= -f2`" = "yes" ]
 	sg_trap="disable"
 fi
 
-safeguard_string="config safeguard_engine state $sg_state cpu_utilization rising_threshold $sg_rise falling_threshold $sg_fall trap_log $sg_trap mode fuzzy"
+safeguard_string="config safeguard_engine state $sg_state utilization rising $sg_rise falling $sg_fall trap_log $sg_trap mode fuzzy"
 
 # Other
 snmp_traps="enable snmp traps\nenable snmp authenticate traps"
@@ -89,7 +92,7 @@ link_trap="enable snmp linkchange_traps\nconfig snmp linkchange_traps ports 1-28
 # SNTP
 sntp_addr1=`grep sntp_primary $rules | cut -d= -f2 | awk -F:: '{print $1}'`
 sntp_addr2=`grep sntp_primary $rules | cut -d= -f2 | awk -F:: '{print $2}'`
-sntp_string="enable sntp\nconfig sntp primary $sntp_addr1 secondary $sntp_addr2 poll-inteval 720"
+sntp_string="enable sntp\nconfig sntp primary $sntp_addr1 secondary $sntp_addr2 poll-interval 720"
 
 # IGMP acc auth
 igmp_acc_auth_enabled="config igmp access_authentication ports $access state enable"
@@ -106,11 +109,11 @@ limited_deny="config limited_multicast_addr ports $trunk access deny"
 
 # SYSLOG
 syslog_ip=`grep 'syslog_host.x.ip' $rules | cut -d= -f2`
-syslog_severity=`grep 'syslog_host.x.severity' $rules | cut -d= -f2`
+#syslog_severity=`grep 'syslog_host.x.severity' $rules | cut -d= -f2`
 syslog_facility=`grep 'syslog_host.x.facility' $rules | cut -d= -f2`
 syslog_state=`grep 'syslog_host.x.state' $rules | cut -d= -f2`
 syslog_del="delete syslog host 2"
-syslog_add="create syslog host 2 ipaddress $syslog_ip severity $syslog_severity facility $syslog_facility state $syslog_state"
+syslog_add="create syslog host 2 ipaddress $syslog_ip severity debug facility $syslog_facility state $syslog_state"
 syslog_enabled="enable_syslog"
 
 # SNMP
@@ -168,13 +171,49 @@ for i in $@
                 "mcast_range.iptv5")                    echo -e "$range5\n$limited_access\n$limited_deny" >> $raw_fix;;
                 "igmp_acc_auth_enabled")                echo -e "$igmp_acc_auth_enabled" >> $raw_fix;;
                 "igmp_acc_auth_disabled")               echo -e "$igmp_acc_auth_disabled" >> $raw_fix;;
-                "syslog")                               echo -e "$syslog_del\n$syslog_add" >> $raw_fix;;
+                "syslog_host")                          echo -e "$syslog_del\n$syslog_add" >> $raw_fix;;
                 "snmp")                                 echo -e "$snmp_del\n$snmp_add" >> $raw_fix;;
                 "radius")                               echo -e "$radius_del\n$radius_add" >> $raw_fix;;
                 "radius_retransmit")                    echo -e "$radius_params" >> $raw_fix;;
                 "radius_timeout")                       echo -e "$radius_params" >> $raw_fix;;
                 "igmp_snooping")                        echo -e "$igmp_snooping" >> $raw_fix;;
                 "syslog_enabled")                       echo -e "$syslog_enabled" >> $raw_fix;;
+                "ism")                                  if [ `/usr/local/sbin/ping_equip.sh $ip` -eq 1 ]
+                                                                then
+                                                                ism_prefix='.1.3.6.1.4.1.171.12.64.3.1.1'
+                                                                ism_name=`snmpget -v2c -c dlread -Ovq $ip $ism_prefix.2.$ism_vlanid | sed -e s/\"//g`
+                                                                uplink=`$get_uplink`
+								raw_tagmember=`snmpget -v2c -c dlread -Ovq $ip $ism_prefix.5.$ism_vlanid | sed -e s/\"//g | awk '{print $1 $2 $3 $4}' | xargs -l /usr/local/sbin/portconv.sh`
+								raw_member=`snmpget -v2c -c dlread -Ovq $ip $ism_prefix.4.$ism_vlanid | sed -e s/\"//g | awk '{print $1 $2 $3 $4}' | xargs -l /usr/local/sbin/portconv.sh`
+								raw_source=`snmpget -v2c -c dlread -Ovq $ip $ism_prefix.3.$ism_vlanid | sed -e s/\"//g | awk '{print $1 $2 $3 $4}' | xargs -l /usr/local/sbin/portconv.sh`
+								tagmember=`/usr/local/sbin/string_to_bitmask.sh $raw_tagmember | xargs -l /usr/local/sbin/bitmask_to_interval.sh`
+								source=`/usr/local/sbin/string_to_bitmask.sh $raw_source | xargs -l /usr/local/sbin/bitmask_to_interval.sh`
+                                                                echo -e "config igmp_snooping multicast_vlan $ism_name del tagged $tagmember" >> $raw_fix
+                                                                echo -e "config igmp_snooping multicast_vlan $ism_name del source $source" >> $raw_fix
+                                                                detailed_trunk=`/usr/local/sbin/interval_to_string.sh $trunk`
+								del_member_raw=''
+
+								for i in $detailed_trunk
+									do
+
+									if [ "`echo $raw_member | grep $i"` ]
+										then
+										del_member_raw=$del_member_raw" $i"
+									fi
+
+								done
+
+								if [ -n "$del_member_raw" ]
+									then
+									del_member=`/usr/local/sbin/string_to_bitmask.sh $del_member_raw | xargs -l /usr/local/sbin/bitmask_to_interval.sh`
+									echo -e "config igmp_snooping multicast_vlan $ism_name del member $del_member" >> $raw_fix
+								fi
+
+                                                                new_source=$uplink
+								new_tagmember=`echo $detailed_trunk | sed -e s/$uplink// | xargs -l /usr/local/sbin/string_to_bitmask.sh | xargs -l /usr/local/sbin/bitmask_to_interval.sh`
+                                                                echo -e "config igmp_snooping multicast_vlan $ism_name add source $new_source" >> $raw_fix
+                                                                echo -e "config igmp_snooping multicast_vlan $ism_name add tagged $new_tagmember" >> $raw_fix
+                                                        fi;;
  	esac
 
 done
