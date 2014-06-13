@@ -10,5 +10,7 @@ cp -r ./usr /
 echo "Copying scripts - done."
 cp -r ./etc /
 echo "Copying settings - done."
+touch '/var/log/isida.log'
+touch '/var/log/checker.log'
 echo "Visit https://github.com/vlad-syan/isida for news."
 

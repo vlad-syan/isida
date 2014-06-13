@@ -21,10 +21,18 @@ fi
 
 if [ ! -f $1 ]
 	then
-	echo "No dry config found at $cfg'!'"
+	echo "No dry config found at $1!"
 	exit 1
 fi
 
+if [ -z $2 ]
+	then
+	echo "No uplink specified!"
+	exit 2
+fi
+
+uplink=$2
+ip=`echo $1 | awk -F'/' '{print $NF}'`
 cp $1 $cfg
 /usr/local/sbin/collapse_ism.sh $1 >> $cfg
 trunk=`grep "trunk" $cfg | cut -d '=' -f2`
@@ -32,14 +40,12 @@ model=`grep "model" $cfg | cut -d '=' -f2`
 fw=`grep "firmware" $cfg | cut -d '=' -f2`
 all='1-28'
 previous_sum=0
-echo -n `date +%F\ %T`" $1: "
 echo `date +%F\ %T` "CHECK: started checker with PID $$ on $1" >> $log
 
 for i in `grep "vlan_name=" $cfg | cut -d '=' -f2`
 	do
 	sum=0
-	ports=`grep "$i.untagged=" $cfg | cut -d '=' -f2 | xargs -l /usr/local/sbin/interval_to_string.sh | xargs -l 
-/usr/local/sbin/string_to_bitmask.sh`
+	ports=`grep "$i.untagged=" $cfg | cut -d '=' -f2 | xargs -l /usr/local/sbin/interval_to_string.sh | xargs -l /usr/local/sbin/string_to_bitmask.sh`
 
 	for j in $ports
 		do
@@ -56,6 +62,7 @@ done
 
 access=`grep "$access_vlan.untagged=" $cfg | cut -d '=' -f2`
 port_count=`grep $model $conf | awk '{print $4}'`
+echo -n `date +%F\ %T`" $ip $model $rules $trunk $access $port_count: "
 
 if [ -z "$port_count" ]
 	then
@@ -66,30 +73,14 @@ not_trunk=`/usr/local/sbin/invert_string_interval.sh $trunk $port_count`
 not_access=`/usr/local/sbin/invert_string_interval.sh $access $port_count`
 all="1-$port_count"
 
-#case $model in
-#
-#	"DES-3200-10")	not_trunk=`/usr/local/sbin/invert_string_interval_10.sh $trunk`
-#			not_access=`/usr/local/sbin/invert_string_interval_10.sh $access`
-#			all='1-10';;
-#	"DES-3200-18")	not_trunk=`/usr/local/sbin/invert_string_interval_18.sh $trunk`
-#			not_access=`/usr/local/sbin/invert_string_interval_18.sh $access`
-#			all='1-18';;
-#	"DES-3200-26")	not_trunk=`/usr/local/sbin/invert_string_interval_26.sh $trunk`
-#			not_access=`/usr/local/sbin/invert_string_interval_26.sh $access`
-#			all='1-26';;
-#	"DES-3526")	not_trunk=`/usr/local/sbin/invert_string_interval_26.sh $trunk`
-#			not_access=`/usr/local/sbin/invert_string_interval_26.sh $access`
-#			all='1-26';;
-#	*)	not_trunk=`/usr/local/sbin/invert_string_interval_28.sh $trunk`
-#		not_access=`/usr/local/sbin/invert_string_interval_28.sh $access`;;
-#esac
+cat $rules_original | grep -v '#' | grep -v '\$' | sed -e s/=trunk/=$trunk/g -e s/=not_trunk/=$not_trunk/g -e s/=all_ports/=$all/g -e s/=access/=$access/g -e s/=not_access/=$not_access/g -e s/=uplink/=$uplink/g > $rules
 
-cat $rules_original | grep -v '#' | grep -v '\$' | sed -e s/=trunk/=$trunk/g -e s/=not_trunk/=$not_trunk/g -e s/=all_ports/=$all/g \
-	-e s/=access/=$access/g -e s/=not_access/=$not_access/g > $rules
-A
-for i in `grep '\$' $cfg | grep -v '#'`
+dependent_rules='/tmp/'`date +%s%N`
+grep '\$' $rules_original | grep -v '#' > $dependent_rules
+
+for i in `cat $dependent_rules`
 	do
-	condition=`echo $i | cut -d '=' -f1 | sed -e 's/\$//' -e 's/\!//'`
+	condition=`echo $i | cut -d '=' -f1 | sed -e 's/\\$//' -e 's/\!//'`
 	condition_model=`echo $condition | cut -d '^' -f1 | awk -F'@' '{print $1}'`
 	condition_fw=`echo $condition | cut -d '^' -f1 | awk -F'@' '{print $2}'`
 	condition_cfg=`echo $i | cut -d '^' -f2`
@@ -102,7 +93,7 @@ for i in `grep '\$' $cfg | grep -v '#'`
 		fw_match=1
 		else
 
-			if [ `echo $firmware | grep -c $condition_fw` -eq 1 ]
+			if [ `echo $fw | grep -c $condition_fw` -eq 1 ]
 				then
 				fw_match=1
 			fi
@@ -119,13 +110,13 @@ for i in `grep '\$' $cfg | grep -v '#'`
 	if [ $negative -eq 0 ] && [ $match -eq 2 ]
 		then
 		echo $condition_cfg | sed -e s/=trunk/=$trunk/g -e s/=not_trunk/=$not_trunk/g \
-			-e s/=all/=$all/g -e s/=not_access/=$not_access/g -e s/=access/=$access/g >> $rules
+			-e s/=all/=$all/g -e s/=not_access/=$not_access/g -e s/=access/=$access/g -e s/=uplink/=$uplink/g >> $rules
 	fi
 
 	if [ $negative -eq 1 ] && [ $match -lt 2 ]
 		then
                 echo $condition_cfg | sed -e s/=trunk/=$trunk/g -e s/=not_trunk/=$not_trunk/g \
-			-e s/=all/=$all/g -e s/=access/=$access/g -e s/=not_access/=$not_access/g >> $rules
+			-e s/=all/=$all/g -e s/=access/=$access/g -e s/=not_access/=$not_access/g -e s/=uplink/=$uplink/g >> $rules
 	fi
 
 done
@@ -221,6 +212,6 @@ for i in `grep "unknown" $cfg`
 	echo -n `echo $i | cut -d '=' -f1`" "
 done
 
-rm $rules $cfg 2>/dev/null
+rm $cfg 2>/dev/null
 echo
 echo `date +%F\ %T` 'CHECK ['$$']:'" ends" >> $log

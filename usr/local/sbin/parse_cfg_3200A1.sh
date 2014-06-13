@@ -31,8 +31,9 @@ fi
 cat $cfg | col > $ascii
 fw=`grep "Build" $ascii | awk -F"Build " '{print $2}'`
 temp=`grep "DES-3200" $ascii | awk '{print $2}'`
-model=`echo $temp | awk -F- '{print $3}' | awk '{print $1}' | sed -e 's/F//'`
-echo "model=DES-3200-$model"
+model=`echo $temp | awk -F- '{print $3}' | awk '{print $1}'`
+port_count=`echo $model | sed -e s/F//`
+echo "model=DES-3200-$model/A1"
 echo "firmware=$fw"
 sysloc=`grep "system_location" $ascii | awk -F"system_location " '{print $2}'`
 echo "system_location=$sysloc"
@@ -45,12 +46,12 @@ echo "system_location=$sysloc"
 
 grep "[config,create] vlan " $ascii > $vlan
 
-if [[ `grep -c 'config vlan default delete 1-'$model $vlan` = 1 ]]
+if [[ `grep -c 'config vlan default delete 1-'$port_count $vlan` = 1 ]]
 	then
 	trunk_ports=`grep default $vlan | grep add | awk '{print $6}'`
 	echo 'trunk='$trunk_ports
 else
-	echo 'trunk='`grep 'config vlan default delete' $vlan | awk '{print $5}' | xargs -l -I{} /usr/local/sbin/invert_string_interval.sh {} $model`
+	echo 'trunk='`grep 'config vlan default delete' $vlan | awk '{print $5}' | xargs -l -I{} /usr/local/sbin/invert_string_interval.sh {} $port_count`
 fi
 
 #=======================#
