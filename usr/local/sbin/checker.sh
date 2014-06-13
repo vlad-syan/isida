@@ -212,6 +212,6 @@ for i in `grep "unknown" $cfg`
 	echo -n `echo $i | cut -d '=' -f1`" "
 done
 
-rm $cfg 2>/dev/null
+rm $dependent_rules $cfg 2>/dev/null
 echo
 echo `date +%F\ %T` 'CHECK ['$$']:'" ends" >> $log
