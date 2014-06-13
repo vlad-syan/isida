@@ -106,6 +106,7 @@ range4="config limited_multicast_addr ports $access add profile_id 4\nconfig lim
 range5="config limited_multicast_addr ports $access add profile_id 5\nconfig limited_multicast_addr ports $not_access delete profile_id 5"
 limited_access="config limited_multicast_addr ports $access access permit"
 limited_deny="config limited_multicast_addr ports $trunk access deny"
+
 # SYSLOG
 syslog_ip=`grep 'syslog_host.x.ip' $rules | cut -d= -f2`
 syslog_severity=`grep 'syslog_host.x.severity' $rules | cut -d= -f2`
@@ -171,7 +172,7 @@ for i in $@
                 "igmp_acc_auth_enabled")                echo -e "$igmp_acc_auth_enabled" >> $raw_fix;;
                 "igmp_acc_auth_disabled")               echo -e "$igmp_acc_auth_disabled" >> $raw_fix;;
                 "syslog_host")                          echo -e "$syslog_del\n$syslog_add" >> $raw_fix;;
-                "snmp")                                 echo -e "$snmp_del\n$snmp_add" >> $raw_fix;;
+                "snmp_host")                            echo -e "$snmp_del\n$snmp_add" >> $raw_fix;;
                 "radius")                               echo -e "$radius_del\n$radius_add" >> $raw_fix;;
                 "radius_retransmit")                    echo -e "$radius_params" >> $raw_fix;;
                 "radius_timeout")                       echo -e "$radius_params" >> $raw_fix;;

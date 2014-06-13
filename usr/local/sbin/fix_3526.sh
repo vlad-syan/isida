@@ -23,7 +23,7 @@ not_trunk=`/usr/local/sbin/invert_string_interval.sh $trunk $port_count`
 # Traffic control
 traf_control_thold=`grep traffic_control_bcast_threshold $rules | cut -d= -f2`
 traffic_control_trap="config traffic control_trap both"
-traffic_control_string="config traffic control $access broadcast enable multicast enable action shutdown threshold $traf_control_thold time_interval 5 countdown 0\nconfig traffic control $not_access broadcast disable multicast disable action shutdown threshold $traf_control_thold time_interval 5 countdown 0"
+traffic_control_string="config traffic control $access broadcast enable multicast enable action shutdown threshold $traf_control_thold time_interval 5 countdown 0\nconfig traffic control $not_access broadcast disable multicast disable action shutdown threshold $traf_control_thold time_interval 5 countdown 0\n$traffic_control_trap"
 
 # LBD
 if [ "`grep lbd_state $rules | cut -d= -f2`" = "enable" ]
@@ -144,7 +144,7 @@ for i in $@
 		"igmp_acc_auth_enabled")		echo -e "$igmp_acc_auth_enabled" >> $raw_fix;;
 		"igmp_acc_auth_disabled")		echo -e "$igmp_acc_auth_disabled" >> $raw_fix;;
                 "syslog_host")				echo -e "$syslog_del\n$syslog_add" >> $raw_fix;;
-                "snmp")                                 echo -e "$snmp_del\n$snmp_add" >> $raw_fix;;
+                "snmp_host")                            echo -e "$snmp_del\n$snmp_add" >> $raw_fix;;
                 "radius")                               echo -e "$radius_del\n$radius_add" >> $raw_fix;;
                 "radius_retransmit")                    echo -e "$radius_params" >> $raw_fix;;
                 "radius_timeout")                       echo -e "$radius_params" >> $raw_fix;;

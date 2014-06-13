@@ -141,7 +141,7 @@ for i in $@
 		"mcast_range.iptv4")			echo -e "$range4" >> $raw_fix;;
 		"mcast_range.iptv5")			echo -e "$range5" >> $raw_fix;;
                 "syslog_host")                          echo -e "$syslog_del\n$syslog_add" >> $raw_fix;;
-                "snmp")                                 echo -e "$snmp_del\n$snmp_add" >> $raw_fix;;
+                "snmp_host")                            echo -e "$snmp_del\n$snmp_add" >> $raw_fix;;
                 "radius")                               echo -e "$radius_del\n$radius_add" >> $raw_fix;;
                 "radius_retransmit")                    echo -e "$radius_params" >> $raw_fix;;
                 "radius_timeout")                       echo -e "$radius_params" >> $raw_fix;;
