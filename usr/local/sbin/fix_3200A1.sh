@@ -154,7 +154,7 @@ for i in $@
                 "ism")                                  if [ `/usr/local/sbin/ping_equip.sh $ip` -eq 1 ]
                                                                 then
 								model_id=`/usr/local/sbin/get_model.sh $ip | sed -e 's/171.10.//'`
-                                                                ism_prefix='.1.3.6.1.4.1.171.11.$model_id.2.7.8.1'
+                                                                ism_prefix=".1.3.6.1.4.1.171.11.$model_id.2.7.8.1"
                                                                 ism_name=`snmpget -v2c -c dlread -Ovq $ip $ism_prefix.2.$ism_vlanid | sed -e s/\"//g`
                                                                 uplink=`$get_uplink`
 								raw_tagmember=`snmpget -v2c -c dlread -Ovq $ip $ism_prefix.5.$ism_vlanid | sed -e s/\"//g | awk '{print $1 $2 $3 $4}' | xargs -l /usr/local/sbin/portconv.sh`
