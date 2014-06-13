@@ -73,7 +73,7 @@ if [ $result -eq 0 ]
 	then
 	echo `date +%F\ %T` 'BACKUP ['$$']:'" $ip cfg downloaded after $count attempt(s)" >> $log
 
-	if [ `grep -cw $model $exclude_model` ] && [ `grep -cw $ip $exclude_ip` -eq 0 ]
+	if [ `grep -cw $model $exclude_model` -eq 0 ] && [ `grep -cw $ip $exclude_ip` -eq 0 ]
 		then
 		/usr/local/sbin/meta-parse.sh $ip > $dry
 		echo `date +%F\ %T` 'BACKUP ['$$']:'" forwarded to checker" >> $log

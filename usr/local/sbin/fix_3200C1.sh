@@ -130,7 +130,7 @@ radius_retransmit=`grep 'radius_retransmit' $rules | cut -d= -f2`
 radius_timeout=`grep 'radius_timeout' $rules | cut -d= -f2`
 radius_del="config radius delete 1"
 radius_add="config radius add 1 $radius_ip key $radius_key auth_port $radius_auth acct_port $radius_acct"
-radius_params="config radius 1 parameter timeout $radius_timeout retransmit $radius_retransmit"
+radius_params="config radius 1 timeout $radius_timeout retransmit $radius_retransmit"
 
 
 for i in $@
@@ -187,7 +187,7 @@ for i in $@
 								raw_source=`snmpget -v2c -c dlread -Ovq $ip $ism_prefix.3.$ism_vlanid | sed -e s/\"//g | awk '{print $1 $2 $3 $4}' | xargs -l /usr/local/sbin/portconv.sh`
 								tagmember=`/usr/local/sbin/string_to_bitmask.sh $raw_tagmember | xargs -l /usr/local/sbin/bitmask_to_interval.sh`
 								source=`/usr/local/sbin/string_to_bitmask.sh $raw_source | xargs -l /usr/local/sbin/bitmask_to_interval.sh`
-                                                                echo -e "config igmp_snooping multicast_vlan $ism_name del tagged $tagmember" >> $raw_fix
+                                                                echo -e "config igmp_snooping multicast_vlan $ism_name del tag $tagmember" >> $raw_fix
                                                                 echo -e "config igmp_snooping multicast_vlan $ism_name del source $source" >> $raw_fix
                                                                 detailed_trunk=`/usr/local/sbin/interval_to_string.sh $trunk`
 
@@ -212,7 +212,7 @@ for i in $@
                                                                 new_source=$uplink
 								new_tagmember=`echo $detailed_trunk | sed -e s/$uplink// | xargs -l /usr/local/sbin/string_to_bitmask.sh | xargs -l /usr/local/sbin/bitmask_to_interval.sh`
                                                                 echo -e "config igmp_snooping multicast_vlan $ism_name add source $new_source" >> $raw_fix
-                                                                echo -e "config igmp_snooping multicast_vlan $ism_name add tagged $new_tagmember" >> $raw_fix
+                                                                echo -e "config igmp_snooping multicast_vlan $ism_name add tag $new_tagmember" >> $raw_fix
                                                         fi;;
 esac
 
@@ -226,5 +226,5 @@ if [ -s $raw_fix ]
 fi
 
 cat $raw_fix | uniq 
-rm -f $rules $raw_fix
+#rm -f $rules $raw_fix
 

@@ -21,7 +21,7 @@ fi
 
 if [ ! -f $1 ]
 	then
-	echo "No dry config found at $cfg'!'"
+	echo "No dry config found at $1!"
 	exit 1
 fi
 
@@ -75,9 +75,12 @@ all="1-$port_count"
 
 cat $rules_original | grep -v '#' | grep -v '\$' | sed -e s/=trunk/=$trunk/g -e s/=not_trunk/=$not_trunk/g -e s/=all_ports/=$all/g -e s/=access/=$access/g -e s/=not_access/=$not_access/g -e s/=uplink/=$uplink/g > $rules
 
-for i in `grep '\$' $rules_original | grep -v '#'`
+dependent_rules='/tmp/'`date +%s%N`
+grep '\$' $rules_original | grep -v '#' > $dependent_rules
+
+for i in `cat $dependent_rules`
 	do
-	condition=`echo $i | cut -d '=' -f1 | sed -e 's/\$//' -e 's/\!//'`
+	condition=`echo $i | cut -d '=' -f1 | sed -e 's/\\$//' -e 's/\!//'`
 	condition_model=`echo $condition | cut -d '^' -f1 | awk -F'@' '{print $1}'`
 	condition_fw=`echo $condition | cut -d '^' -f1 | awk -F'@' '{print $2}'`
 	condition_cfg=`echo $i | cut -d '^' -f2`
@@ -90,7 +93,7 @@ for i in `grep '\$' $rules_original | grep -v '#'`
 		fw_match=1
 		else
 
-			if [ `echo $firmware | grep -c $condition_fw` -eq 1 ]
+			if [ `echo $fw | grep -c $condition_fw` -eq 1 ]
 				then
 				fw_match=1
 			fi

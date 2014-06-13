@@ -58,7 +58,7 @@ link_trap="enable snmp linkchange_traps\nconfig snmp linkchange_traps ports all 
 dhcp_local_relay="disable dhcp_local_relay"
 dhcp_snooping="disable address_binding dhcp_snoop"
 impb_acl_mode="disable address_binding acl_mode"
-dhcp_screening="config filter dhcp_server ports $access state enable\nconfig filter dhcp_server ports $trunk state disable"
+dhcp_screening="config filter dhcp_server ports $access state enable\nconfig filter dhcp_server ports $not_access state disable"
 impb_trap="enable address_binding trap_log"
 cpu_interface_filtering="enable cpu_interface_filtering"
 arp_aging_time="config arp_aging time `grep arp_aging_time $rules | cut -d= -f2`"
@@ -161,7 +161,7 @@ for i in $@
 								raw_source=`snmpget -v2c -c dlread -Ovq $ip $ism_prefix.3.$ism_vlanid | sed -e s/\"//g | awk '{print $1 $2 $3 $4}' | xargs -l /usr/local/sbin/portconv.sh`
 								tagmember=`/usr/local/sbin/string_to_bitmask.sh $raw_tagmember | xargs -l /usr/local/sbin/bitmask_to_interval.sh`
 								source=`/usr/local/sbin/string_to_bitmask.sh $raw_source | xargs -l /usr/local/sbin/bitmask_to_interval.sh`
-								echo -e "config igmp_snooping multicast_vlan $ism_name del tagged $tagmember" >> $raw_fix
+								echo -e "config igmp_snooping multicast_vlan $ism_name del tag $tagmember" >> $raw_fix
 								echo -e "config igmp_snooping multicast_vlan $ism_name del source $source" >> $raw_fix
 								detailed_trunk=`/usr/local/sbin/interval_to_string.sh $trunk`
                                                                 del_member_raw=''
@@ -185,7 +185,7 @@ for i in $@
 								new_source=$uplink
 								new_tagmember=`echo $detailed_trunk | sed -e s/$uplink// | xargs -l /usr/local/sbin/string_to_bitmask.sh | xargs -l /usr/local/sbin/bitmask_to_interval.sh`
 								echo -e "config igmp_snooping multicast_vlan $ism_name add source $new_source" >> $raw_fix
-								echo -e "config igmp_snooping multicast_vlan $ism_name add tagged $new_tagmember" >> $raw_fix
+								echo -e "config igmp_snooping multicast_vlan $ism_name add tag $new_tagmember" >> $raw_fix
 							fi;;
 	esac
 

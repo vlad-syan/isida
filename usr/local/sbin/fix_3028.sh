@@ -56,7 +56,7 @@ snmp_traps="enable snmp traps\nenable snmp authenticate traps"
 link_trap="enable snmp linkchange_traps\nconfig snmp linkchange_traps ports all enable"
 dhcp_local_relay="disable dhcp_local_relay"
 dhcp_snooping="disable address_binding dhcp_snoop"
-dhcp_screening="config filter dhcp_server ports $access state enable"
+dhcp_screening="config filter dhcp_server ports $access state enable\nconfig filter dhcp_server ports $not_access state disable"
 impb_trap="enable address_binding trap_log"
 cpu_interface_filtering="enable cpu_interface_filtering"
 arp_aging_time="config arp_aging time `grep arp_aging_time $rules | cut -d= -f2`"
@@ -118,6 +118,7 @@ for i in $@
 		"lbd_state")				echo -e "$lbd_state" >> $raw_fix;;
 		"lbd_on")				echo -e "$lbd_on" >> $raw_fix;;
 		"lbd_off")				echo -e "$lbd_off" >> $raw_fix;;
+		"lbd_trap")				echo -e "$syslog_del\n$syslog_add" >> $raw_fix;;
 		"safeguard_state")			echo -e "$safeguard_string" >> $raw_fix;;
 		"safeguard_trap")			echo -e "$safeguard_string" >> $raw_fix;;
 		"safeguard_rising")			echo -e "$safeguard_string" >> $raw_fix;;
@@ -156,7 +157,7 @@ for i in $@
                                                                 raw_tagmember=`snmpget -v2c -c dlread -Ovq $ip $ism_prefix.5.$ism_vlanid | sed -e s/\"//g | awk '{print $1 $2 $3 $4}' | xargs -l /usr/local/sbin/portconv.sh`
                                                                 tagmember=`/usr/local/sbin/string_to_bitmask.sh $raw_tagmember | xargs -l /usr/local/sbin/bitmask_to_interval.sh`
                                                                 source=`/usr/local/sbin/string_to_bitmask.sh $raw_source | xargs -l /usr/local/sbin/bitmask_to_interval.sh`
-                                                                echo -e "config igmp_snooping multicast_vlan $ism_name del tagged $tagmember" >> $raw_fix
+                                                                echo -e "config igmp_snooping multicast_vlan $ism_name del tag $tagmember" >> $raw_fix
                                                                 echo -e "config igmp_snooping multicast_vlan $ism_name del source $source" >> $raw_fix
                                                                 detailed_trunk=`/usr/local/sbin/interval_to_string.sh $trunk`
 								del_member_raw=''
@@ -180,7 +181,7 @@ for i in $@
                                                                 new_source=$uplink
                                                                 new_tagmember=`echo $detailed_trunk | sed -e s/$uplink// | xargs -l /usr/local/sbin/string_to_bitmask.sh | xargs -l /usr/local/sbin/bitmask_to_interval.sh`
                                                                 echo -e "config igmp_snooping multicast_vlan $ism_name add source $new_source" >> $raw_fix
-                                                                echo -e "config igmp_snooping multicast_vlan $ism_name add tagged $new_tagmember" >> $raw_fix
+                                                                echo -e "config igmp_snooping multicast_vlan $ism_name add tag $new_tagmember" >> $raw_fix
                                                         fi;;
 
 esac
