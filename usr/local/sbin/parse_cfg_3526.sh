@@ -486,6 +486,7 @@ for i in `grep "create multicast_range" $ism | awk '{print $3}'`
 done
 
 /usr/local/sbin/collapse_mcast.sh $dry_mcast
+#cat $dry_mcast
 
 permit_access=`grep "access permit" $ism | awk -Fports '{print $2}' | awk '{print $1}'`
 deny_access=`grep "access deny" $ism | awk -Fports '{print $2}' | awk '{print $1}'`

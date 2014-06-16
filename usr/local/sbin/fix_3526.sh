@@ -58,7 +58,7 @@ dhcp_local_relay="disable dhcp_local_relay"
 dhcp_snooping="disable address_binding dhcp_snoop"
 impb_acl_mode="disable address_binding acl_mode"
 dhcp_screening="config filter dhcp_server ports $access state enable\nconfig filter dhcp_server ports $not_access state disabled"
-netbios_filter="config filter netbios $access state enable"
+netbios_filter="config filter netbios $access state enable\nconfig filter netbios $not_access state disable"
 impb_trap="enable address_binding trap_log"
 cpu_interface_filtering="enable cpu_interface_filtering"
 arp_aging_time="config arp_aging time `grep arp_aging_time $rules | cut -d= -f2`"
@@ -100,11 +100,11 @@ igmp_acc_auth_enabled="config igmp access_authentication ports $access state ena
 igmp_acc_auth_disabled="config igmp access_authentication ports $not_access state disable"
 
 # Limited mcast
-range1="config limited_multicast_addr ports $access add multicast_range iptv1"
-range2="config limited_multicast_addr ports $access add multicast_range iptv2"
-range3="config limited_multicast_addr ports $access add multicast_range iptv3"
-range4="config limited_multicast_addr ports $access add multicast_range iptv4"
-range5="config limited_multicast_addr ports $access add multicast_range iptv5"
+range1="config limited_multicast_addr ports $not_access del multicast_range iptv1\nconfig limited_multicast_addr ports $access add multicast_range iptv1"
+range2="config limited_multicast_addr ports $not_access del multicast_range iptv2\nconfig limited_multicast_addr ports $access add multicast_range iptv2"
+range3="config limited_multicast_addr ports $not_access del multicast_range iptv3\nconfig limited_multicast_addr ports $access add multicast_range iptv3"
+range4="config limited_multicast_addr ports $not_access del multicast_range iptv4\nconfig limited_multicast_addr ports $access add multicast_range iptv4"
+range5="config limited_multicast_addr ports $not_access del multicast_range iptv5\nconfig limited_multicast_addr ports 1-26 del multicast_range system\nconfig limited_multicast_addr ports 1-26 del multicast_range iptv\ndelete multicast_range system\ndelete multicast_range iptv\nconfig limited_multicast_addr ports $access add multicast_range iptv5"
 limited_access="config limited_multicast_addr ports $access access permit state enable"
 limited_deny="config limited_multicast_addr ports $trunk access deny state disable"
 
@@ -131,7 +131,7 @@ for i in $@
 		"dhcp_screening")			echo -e "$dhcp_screening" >> $raw_fix;;
 		"netbios_filter")			echo -e "$netbios_filter" >> $raw_fix;;
 		"impb_trap")				echo -e "$impb_trap" >> $raw_fix;;
-		"cpu_interface_filtering")		echo -e "$cpu_interface_filter" >> $raw_fixing;;
+		"cpu_interface_filtering")		echo -e "$cpu_interface_filterng" >> $raw_fixing;;
 		"arp_aging_time")			echo -e "$arp_aging_time" >> $raw_fix;;
 		"sntp_state")				echo -e "$sntp_string" >> $raw_fix;;
 		"sntp_primary")				echo -e "$sntp_string" >> $raw_fix;;
