@@ -131,7 +131,7 @@ radius_retransmit=`grep 'radius_retransmit' $rules | cut -d= -f2`
 radius_timeout=`grep 'radius_timeout' $rules | cut -d= -f2`
 radius_del="config radius delete 1"
 radius_add="config radius add 1 $radius_ip key $radius_key auth_port $radius_auth acct_port $radius_acct"
-radius_params="config radius timeout $radius_timeout retransmit $radius_retransmit"
+radius_params="config radius 1 timeout $radius_timeout retransmit $radius_retransmit"
 
 
 for i in $@
@@ -173,7 +173,7 @@ for i in $@
                 "igmp_acc_auth_disabled")               echo -e "$igmp_acc_auth_disabled" >> $raw_fix;;
                 "syslog_host")                          echo -e "$syslog_del\n$syslog_add" >> $raw_fix;;
                 "snmp_host")                            echo -e "$snmp_del\n$snmp_add" >> $raw_fix;;
-                "radius")                               echo -e "$radius_del\n$radius_add" >> $raw_fix;;
+                "radius")                               echo -e "$radius_del\n$radius_add\n$radius_params" >> $raw_fix;;
                 "radius_retransmit")                    echo -e "$radius_params" >> $raw_fix;;
                 "radius_timeout")                       echo -e "$radius_params" >> $raw_fix;;
                 "igmp_snooping")                        echo -e "$igmp_snooping" >> $raw_fix;;

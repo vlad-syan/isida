@@ -212,6 +212,11 @@ for i in `grep "unknown" $cfg`
 	echo -n `echo $i | cut -d '=' -f1`" "
 done
 
+if [ `echo $complex_names | grep -c radius` -eq 0 ]
+	then
+	echo -n "radius "
+fi
+
 rm $dependent_rules $cfg 2>/dev/null
 echo
 echo `date +%F\ %T` 'CHECK ['$$']:'" ends" >> $log
