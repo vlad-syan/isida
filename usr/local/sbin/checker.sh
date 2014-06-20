@@ -212,7 +212,7 @@ for i in `grep "unknown" $cfg`
 	echo -n `echo $i | cut -d '=' -f1`" "
 done
 
-if [ `echo $complex_names | grep -c radius` -eq 0 ]
+if [ `grep -c "radius.*ip" $cfg` -eq 0 ]
 	then
 	echo -n "radius "
 fi
