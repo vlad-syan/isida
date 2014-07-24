@@ -4,6 +4,7 @@ rules_original='/etc/isida/checker_rules.conf'
 rules='/tmp/'`date +%s%N`
 conf='/etc/isida/model.conf'
 log='/var/log/isida.log'
+#log='/dev/null'
 
 if [ ! -f $rules_original ]
 	then
@@ -185,23 +186,45 @@ complex_names=`cut -d '=' -f1 $rules | grep '.x.' | cut -d '.' -f1 | uniq`
 
 for i in $complex_names
 	do
+	complex_result=1
+
+#			echo $i:
+
 	buf=`grep $i $cfg | awk -F. '{print $2}' | uniq`
+
+#			echo buf - $buf
 
 	for count in $buf
 		do
 		complex_keys=`cut -d '=' -f1 $rules | grep '.x.' | grep $i | sed -e s/.x./.$count./g`
 		sum=0
+
+#		echo $count - $complex_keys
+
 		for x in $complex_keys
 			do
 			check_key $x $count
 			ret=$?
+
+#			echo $x $count $ret
+
 			sum=$((sum + ret))
 		done
 
+		if [ $sum -eq 0 ]
+			then
+			complex_result=0
+		fi
+
 	done
 
-	if [ $sum -gt 0 ]
+#			echo sum - $sum
+
+	if [ $complex_result -gt 0 ]
 		then
+
+#		echo "(!)$i "
+
 		echo -n "$i "
 	fi
 

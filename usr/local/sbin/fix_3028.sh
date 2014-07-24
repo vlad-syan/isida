@@ -73,7 +73,7 @@ syslog_enabled="enable_syslog"
 # SNMP
 snmp_ip=`grep 'snmp_host.x.ip' $rules | cut -d= -f2`
 snmp_community=`grep 'snmp_host.x.community' $rules | cut -d= -f2`
-snmp_del="delete snmp host $snmp_ip"
+snmp_del="delete snmp host $snmp_ip\ndelete snmp host 192.168.1.120"
 snmp_add="create snmp host $snmp_ip v2c $snmp_community"
 
 # RADIUS
